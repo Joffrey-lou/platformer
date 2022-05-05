@@ -2914,10 +2914,13 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   function loadAssets() {
     loadSprite("player", "sprites/player.png");
     loadSprite("portal", "sprites/portal.png");
-    loadSprite("box", "sprites/box.png");
     loadSprite("enemy", "sprites/enemy.png");
     loadSprite("coin", "sprites/coin.png");
+    loadSprite("void", "sprites/VOID.png");
     loadSprite("floor_spike", "sprites/spike/spike_0.png");
+    loadSprite("left_wall_spike", "sprites/spike/spike_1.png");
+    loadSprite("roof_spike", "sprites/spike/spike_2.png");
+    loadSprite("right_wall_spike", "sprites/spike/spike_3.png");
     loadSprite("horizontal_border", "sprites/border/border_0.png");
     loadSprite("vertical_border", "sprites/border/border_1.png");
     loadSprite("top_left_border", "sprites/border/border_2.png");
@@ -2926,20 +2929,16 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     loadSprite("bottom_left_border", "sprites/border/border_5.png");
     loadSound("pop", "sounds/pop.mp3");
     loadSound("hit", "sounds/explode.mp3");
+    loadSound("collect", "sounds/coin.wav");
   }
   __name(loadAssets, "loadAssets");
 
   // code/killed.js
   function killed() {
-    add([
-      text("Game Over :(", { size: 24 }),
-      pos(toWorld(vec2(160, 120))),
-      color(255, 255, 255),
-      origin("center"),
-      layer("ui")
-    ]);
-    wait(2, () => {
-      go("lose");
+    play("hit");
+    shake(120);
+    wait(0.5, () => {
+      go("game");
     });
   }
   __name(killed, "killed");
@@ -2953,43 +2952,52 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   });
   loadAssets();
   var JUMP_FORCE = 700;
-  var ACCUMULATE_FORCE = 0;
   var MOVE_SPEED = 160;
-  var FALL_DEATH = 2400;
+  var FALL_DEATH = 200;
+  var ACCUMULATE_FORCE = 0;
+  var LASTY = 0;
   var LEVELS = [
     [
-      "1                              2",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "|                  |",
-      "4====2        1====3",
-      "     |        |     ",
-      "     |        |     ",
-      "     |        |     ",
-      "     |        |     ",
-      "     |        |     ",
-      "     | ^      |     ",
-      "     4========3     "
+      "BBB1==================2BBB",
+      "BBB|                  |BBB",
+      "BBB|                  |BBB",
+      "BBB|                  |BBB",
+      "BBB|              p   |BBB",
+      "BBB|   12        ===  |BBB",
+      "BBB|   43             |BBB",
+      "BBB|                  |BBB",
+      "BBB|                  |BBB",
+      "BBB|              1===3BBB",
+      "BBB|              |BBBBBBB",
+      "BBB|              4===2BBB",
+      "BBB|   12             |BBB",
+      "BBB|   43             |BBB",
+      "BBB|                  |BBB",
+      "BBB|                  |BBB",
+      "BBB|            ^     |BBB",
+      "BBB|   1=2   c  1=2   |BBB",
+      "BBB|   |B|>     |B|   |BBB",
+      "BBB|   4=3   c  4=3   |BBB",
+      "BBB|                  |BBB",
+      "BBB|         c        |BBB",
+      "BBB|                  |BBB",
+      "BBB|                  |BBB",
+      "BBB|      1====2>     |BBB",
+      "BBB|      |BBBB|      |BBB",
+      "BBB|      4====3      |BBB",
+      "BBB|>       v         |BBB",
+      "BBB|                  |BBB",
+      "BBB|                  |BBB",
+      "BBB4====2        1====3BBB",
+      "BBBBBBBB|        |BBBBBBBB",
+      "BBBBBBBB|        |BBBBBBBB",
+      "BBBBBBBB|       <|BBBBBBBB",
+      "BBBBBBBB|        |BBBBBBBB",
+      "BBBBBBBB|        |BBBBBBBB",
+      "BBBBBBBB| ^    c |BBBBBBBB",
+      "BBBBBBBB4========3BBBBBBBB",
+      "BBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "BBBBBBBBBBBBBBBBBBBBBBBBBB"
     ]
   ];
   var levelConf = {
@@ -3033,7 +3041,28 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     ],
     "^": () => [
       sprite("floor_spike"),
-      area({ scale: 0.5 }),
+      area({ scale: 0.8 }),
+      solid(),
+      origin("bot"),
+      "danger"
+    ],
+    "v": () => [
+      sprite("roof_spike"),
+      area({ scale: 0.8 }),
+      solid(),
+      origin("bot"),
+      "danger"
+    ],
+    ">": () => [
+      sprite("left_wall_spike"),
+      area({ scale: 0.8 }),
+      solid(),
+      origin("bot"),
+      "danger"
+    ],
+    "<": () => [
+      sprite("right_wall_spike"),
+      area({ scale: 0.8 }),
       solid(),
       origin("bot"),
       "danger"
@@ -3051,27 +3080,30 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       area(),
       origin("bot"),
       "coin"
+    ],
+    "B": () => [
+      sprite("void"),
+      origin("bot")
     ]
   };
   scene("game", ({ levelId } = { levelId: 0 }) => {
     gravity(3200);
+    LASTY = 1e3;
     const level = addLevel(LEVELS[levelId != null ? levelId : 0], levelConf);
     const player = add([
       sprite("player"),
-      pos(200, 180),
+      pos(200, 480),
       area(),
       scale(1),
       body(),
       origin("bot")
     ]);
+    camPos(player.pos.x, player.pos.y - 100);
     player.onUpdate(() => {
-      camPos(player.pos.x, player.pos.y);
-      if (player.pos.y >= FALL_DEATH)
-        go("lose");
+      var currCam = camPos();
+      camPos(currCam.x, player.pos.y - 80);
     });
     player.onCollide("danger", () => {
-      play("hit");
-      shake(120);
       killed();
     });
     player.onCollide("portal", () => {
@@ -3083,30 +3115,27 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
         go("win");
       }
     });
-    player.onGround((l) => {
-      if (l.is("enemy")) {
-        player.jump(JUMP_FORCE * 1.5);
-        destroy(l);
-        addKaboom(player.pos);
-      }
-    });
-    player.onCollide("enemy", (e, col) => {
-      if (!col.isBottom()) {
-        go("lose");
-      }
+    player.onGround(() => {
+      if (player.pos.y - LASTY > FALL_DEATH)
+        killed();
+      ACCUMULATE_FALL = 0;
+      LASTY = player.pos.y;
     });
     player.onCollide("coin", (coin) => {
-      play("pop");
+      play("collect");
       destroy(coin);
     });
     onKeyDown("space", () => {
       if (player.isGrounded()) {
         if (ACCUMULATE_FORCE < 450)
           ACCUMULATE_FORCE += 5;
+        player.scale.y = 1 - ACCUMULATE_FORCE / 1e3;
         onKeyRelease("space", () => {
           if (player.isGrounded()) {
+            play("pop");
             player.jump(JUMP_FORCE + ACCUMULATE_FORCE);
             ACCUMULATE_FORCE = 0;
+            player.scale.y = 1;
           }
         });
       }
@@ -3128,12 +3157,6 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   scene("win", () => {
     add([
       text("You Win")
-    ]);
-    onKeyPress(() => go("game"));
-  });
-  scene("lose", () => {
-    add([
-      text("You Lose")
     ]);
     onKeyPress(() => go("game"));
   });

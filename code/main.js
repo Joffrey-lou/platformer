@@ -14,44 +14,56 @@ loadAssets()
 
 // define some constants
 const JUMP_FORCE = 700
-let ACCUMULATE_FORCE = 0
 const MOVE_SPEED = 160
-const FALL_DEATH = 2400
+const FALL_DEATH = 200
+
+let ACCUMULATE_FORCE = 0
+let LASTY = 0
+
 //level 
 
  const LEVELS = [
-	[ "1                              2",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "|                  |",
-    "4====2        1====3",
-    "     |        |     ",
-    "     |        |     ",
-    "     |        |     ",
-    "     |        |     ",
-    "     |        |     ",
-    "     | ^      |     ",
-		"     4========3     ",
+	[
+    "BBB1==================2BBB",
+    "BBB|                  |BBB",
+    "BBB|                  |BBB",
+    "BBB|                  |BBB",
+    "BBB|              p   |BBB",
+    "BBB|   12        ===  |BBB",
+    "BBB|   43             |BBB",
+    "BBB|                  |BBB",
+    "BBB|                  |BBB",
+    "BBB|              1===3BBB",
+    "BBB|              |BBBBBBB",
+    "BBB|              4===2BBB",
+    "BBB|   12             |BBB",
+    "BBB|   43             |BBB",
+    "BBB|                  |BBB",
+    "BBB|                  |BBB",
+    "BBB|            ^     |BBB",
+    "BBB|   1=2   c  1=2   |BBB",
+    "BBB|   |B|>     |B|   |BBB",
+    "BBB|   4=3   c  4=3   |BBB",
+    "BBB|                  |BBB",
+    "BBB|         c        |BBB",
+    "BBB|                  |BBB",
+    "BBB|                  |BBB",
+    "BBB|      1====2>     |BBB",
+    "BBB|      |BBBB|      |BBB",
+    "BBB|      4====3      |BBB",
+    "BBB|>       v         |BBB",
+    "BBB|                  |BBB",
+    "BBB|                  |BBB",
+    "BBB4====2        1====3BBB",
+    "BBBBBBBB|        |BBBBBBBB",
+    "BBBBBBBB|        |BBBBBBBB",
+    "BBBBBBBB|       <|BBBBBBBB",
+    "BBBBBBBB|        |BBBBBBBB",
+    "BBBBBBBB|        |BBBBBBBB",
+    "BBBBBBBB| ^    c |BBBBBBBB",
+		"BBBBBBBB4========3BBBBBBBB",
+    "BBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBBBBBBBBBBBBBB",
 	],   
 ]
   // define what each symbol means in the level graph
@@ -98,7 +110,28 @@ const FALL_DEATH = 2400
 	],
    "^": () => [
 		sprite("floor_spike"),
-		area({ scale: 0.5, }),
+		area({ scale: 0.8, }),
+    solid(),
+		origin("bot"),
+		"danger",
+	],
+    "v": () => [
+		sprite("roof_spike"),
+		area({ scale: 0.8, }),
+    solid(),
+		origin("bot"),
+		"danger",
+	],
+    ">": () => [
+		sprite("left_wall_spike"),
+		area({ scale: 0.8, }),
+    solid(),
+		origin("bot"),
+		"danger",
+	],
+    "<": () => [
+		sprite("right_wall_spike"),
+		area({ scale: 0.8, }),
     solid(),
 		origin("bot"),
 		"danger",
@@ -117,19 +150,24 @@ const FALL_DEATH = 2400
 		origin("bot"),
     "coin",
 	],
+   "B": () => [
+		sprite("void"),
+		origin("bot"),
+	],
 	}
 
 scene("game", ({ levelId} = { levelId: 0}) => {
-  
-	gravity(3200)
 
+	gravity(3200)
+LASTY = 1000
+  
 	// add level to scene
 	const level = addLevel(LEVELS[levelId ?? 0], levelConf)
   
 	// define player object
 	const player = add([
 		sprite("player"),
-		pos(200, 180),
+		pos(200  , 480),
 		area(), 
 		scale(1),
 		// makes it fall to gravity and jumpable
@@ -137,29 +175,21 @@ scene("game", ({ levelId} = { levelId: 0}) => {
 		origin("bot"),
 	])
 
+   camPos(player.pos.x, player.pos.y-100);    
+  
 	// action() runs every frame
-	player.onUpdate(() => {
-    
-    camPos(player.pos.x,player.pos.y)
-    
+	player.onUpdate(() => {    
+    var currCam = camPos()
+    camPos(currCam.x,player.pos.y - 80)
 		/* center camera to player when go up
-     var currCam = camPos();
     if (currCam.y > player.pos.y) 
-        camPos(currCam.x, player.pos.y);    
+        camPos(currCam.x, player.pos.y);     
     */
-    
-		// check fall death
-		if (player.pos.y >= FALL_DEATH) 
-			go("lose");
-		
 	})
 
 	// if player onCollide with any obj with "danger" tag, lose
 	player.onCollide("danger", () => {
-    play("hit")
-    shake(120)
-    killed()
-    
+    killed()   
 	})
 
 	player.onCollide("portal", () => {
@@ -172,25 +202,16 @@ scene("game", ({ levelId} = { levelId: 0}) => {
 		}
 	})
 
-	player.onGround((l) => {
-		if (l.is("enemy")) {
-			player.jump(JUMP_FORCE * 1.5)
-			destroy(l)
-			addKaboom(player.pos)
-			
-		}		
-	})
-
-	player.onCollide("enemy", (e, col) => {
-		// if it's not from the top, die
-		if (!col.isBottom()) {
-			go("lose")
-		}
-	})
+  player.onGround(() => {  
+    if ( (player.pos.y - LASTY) > FALL_DEATH)
+        killed();
+    ACCUMULATE_FALL = 0
+    LASTY = player.pos.y
+  })
 
   player.onCollide("coin", (coin) => {
-    play("pop");
-    destroy(coin);
+    play("collect")
+    destroy(coin)
 })
 
 	// jump
@@ -202,14 +223,17 @@ scene("game", ({ levelId} = { levelId: 0}) => {
       // on space down accumulate force
       if  (ACCUMULATE_FORCE < 450)
               ACCUMULATE_FORCE += 5;
+      player.scale.y = 1-( ACCUMULATE_FORCE/1000)
       
       onKeyRelease("space", () => 
         {          
           // on space release jump with original + accumulate force
         if (player.isGrounded()) 
         {
+          play("pop")
         	player.jump(JUMP_FORCE + ACCUMULATE_FORCE)
           ACCUMULATE_FORCE = 0
+          player.scale.y = 1
         }
       }) 	
 		}
@@ -237,13 +261,6 @@ scene("game", ({ levelId} = { levelId: 0}) => {
 scene("win", () => {
 	add([
 		text("You Win"),
-	])
-	onKeyPress(() => go("game"))
-})
-
-scene("lose", () => {
-	add([
-		text("You Lose"),
 	])
 	onKeyPress(() => go("game"))
 })
