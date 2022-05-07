@@ -2910,17 +2910,38 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     return ye;
   }, "default");
 
+  // code/patrol.js
+  function patrol(speed = 60, dir = 1) {
+    return {
+      id: "patrol",
+      require: ["pos", "area"],
+      add() {
+        this.on("collide", (obj, col) => {
+          if (col.isLeft() || col.isRight()) {
+            dir = -dir;
+          }
+        });
+      },
+      update() {
+        this.move(speed * dir, 0);
+      }
+    };
+  }
+  __name(patrol, "patrol");
+
   // code/assets.js
   function loadAssets() {
     loadSprite("player", "sprites/player.png");
-    loadSprite("portal", "sprites/portal.png");
+    loadSprite("door", "sprites/door.png");
     loadSprite("enemy", "sprites/enemy.png");
     loadSprite("coin", "sprites/coin.png");
-    loadSprite("void", "sprites/VOID.png");
+    loadSprite("background", "sprites/background.png");
     loadSprite("floor_spike", "sprites/spike/spike_0.png");
     loadSprite("left_wall_spike", "sprites/spike/spike_1.png");
     loadSprite("roof_spike", "sprites/spike/spike_2.png");
     loadSprite("right_wall_spike", "sprites/spike/spike_3.png");
+    loadSprite("hidden_floor_spike_0", "sprites/hidden_spike/floor_spike_0.png");
+    loadSprite("hidden_floor_spike_1", "sprites/hidden_spike/floor_spike_1.png");
     loadSprite("horizontal_border", "sprites/border/border_0.png");
     loadSprite("vertical_border", "sprites/border/border_1.png");
     loadSprite("top_left_border", "sprites/border/border_2.png");
@@ -2936,18 +2957,327 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   // code/killed.js
   function killed() {
     play("hit");
-    shake(120);
+    shake(60);
     wait(0.5, () => {
       go("game");
     });
   }
   __name(killed, "killed");
 
+  // code/levels.js
+  function loadLevels(p) {
+    switch (p) {
+      case 1:
+        return [
+          "1==================2",
+          "|   c              |",
+          "|    c             |",
+          "|   c              |",
+          "|    c         p   |",
+          "|   12        ===  |",
+          "|   43             |",
+          "|                  |",
+          "|                  |",
+          "|              1===3",
+          "|              |",
+          "|              4===2",
+          "|   12             |",
+          "|   43             |",
+          "|                  |",
+          "|                  |",
+          "|             ^    |",
+          "|   1=2   c  1=2   |",
+          "|   | |>     | |   |",
+          "|   4=3   c  4=3   |",
+          "|                  |",
+          "|         c        |",
+          "|                  |",
+          "|                  |",
+          "|      1====2>     |",
+          "|      |    |      |",
+          "|      4====3      |",
+          "|>       v         |",
+          "|                  |",
+          "|   ^            e |",
+          "4====2        1====3",
+          "     |        |     ",
+          "     |        |     ",
+          "     |       <|     ",
+          "     |        |     ",
+          "     |        |     ",
+          "     | ^    c |     ",
+          "     4========3     "
+        ];
+      case 2:
+        return [
+          "1==================2",
+          "|      c   c       |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|     ^  ^  ^   p  |",
+          "|     1============3",
+          "|     4============2",
+          "|                  |",
+          "|                  |",
+          "|     cccc         |",
+          "|   1=====2>       |",
+          "|   4=====3        |",
+          "|                  |",
+          "| c                |",
+          "4=============2    |",
+          "1=============3    |",
+          "|                  |",
+          "|               c  |",
+          "|       1=2        |",
+          "|  1=2  | |   1=2  |",
+          "|  4=3  | |   4=3> |",
+          "|    v  | |        |",
+          "|       | |        |",
+          "|      c| |        |",
+          "|  1====3 4====2   |",
+          "|> |           |   |",
+          "|  4===========3   |",
+          "|                  |",
+          "|          c       |",
+          "|                  |",
+          "|    12    ^       |",
+          "|    ||    12      |",
+          "|    ||    ||      |",
+          "4====34====34======3"
+        ];
+      case 3:
+        return [
+          "1==================2",
+          "|                  |",
+          "| c                |",
+          "| c                |",
+          "| c                |",
+          "|               p  |",
+          "| 12     12     12 |",
+          "| 43     43     43 |",
+          "|         v      c |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|  12              |",
+          "|  43              |",
+          "|                  |",
+          "|  c  ^            |",
+          "|     1=====2      |",
+          "|     4====2|      |",
+          "|         <||      |",
+          "| c     c <||      |",
+          "|         <13      |",
+          "|             1====3",
+          "|             4====2",
+          "|                  |",
+          "|   1===2          |",
+          "|   |   |          |",
+          "|   |   |          |",
+          "|   |   |c^ ^   c  |",
+          "|   |   4==========3",
+          "|   4==============2",
+          "|                  |",
+          "|       1=2        |",
+          "|       | |        |",
+          "| c ^ c | |        |",
+          "4=======3 4========3"
+        ];
+    }
+  }
+  __name(loadLevels, "loadLevels");
+
+  // code/levelConf.js
+  function loadConf() {
+    return {
+      width: 16,
+      height: 16,
+      "=": () => [
+        sprite("horizontal_border"),
+        area(),
+        solid(),
+        origin("bot")
+      ],
+      "|": () => [
+        sprite("vertical_border"),
+        area(),
+        solid(),
+        origin("bot")
+      ],
+      "1": () => [
+        sprite("top_left_border"),
+        area(),
+        solid(),
+        origin("bot")
+      ],
+      "2": () => [
+        sprite("top_right_border"),
+        area(),
+        solid(),
+        origin("bot")
+      ],
+      "3": () => [
+        sprite("bottom_right_border"),
+        area(),
+        solid(),
+        origin("bot")
+      ],
+      "4": () => [
+        sprite("bottom_left_border"),
+        area(),
+        solid(),
+        origin("bot")
+      ],
+      "^": () => [
+        sprite("floor_spike"),
+        area({ scale: 0.7 }),
+        solid(),
+        origin("bot"),
+        "danger"
+      ],
+      "v": () => [
+        sprite("roof_spike"),
+        area({ scale: 0.8 }),
+        solid(),
+        origin("bot"),
+        "danger"
+      ],
+      ">": () => [
+        sprite("left_wall_spike"),
+        area({ scale: 0.8 }),
+        solid(),
+        origin("bot"),
+        "danger"
+      ],
+      "<": () => [
+        sprite("right_wall_spike"),
+        area({ scale: 0.8 }),
+        solid(),
+        origin("bot"),
+        "danger"
+      ],
+      "p": () => [
+        sprite("door"),
+        area({ scale: 0.5 }),
+        solid(),
+        origin("bot"),
+        "door"
+      ],
+      "c": () => [
+        sprite("coin"),
+        area(),
+        origin("bot"),
+        "coin"
+      ],
+      "B": () => [
+        sprite("background"),
+        origin("bot")
+      ],
+      "e": () => [
+        sprite("enemy"),
+        origin("bot"),
+        solid(),
+        area({ width: 16, height: 6 }),
+        patrol()
+      ]
+    };
+  }
+  __name(loadConf, "loadConf");
+
+  // code/backgrounds.js
+  function loadBackgrounds(p) {
+    switch (p) {
+      case 1:
+        return [
+          "1==================2",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBB    ",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBB BBBBBBBB BBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "|BBBBBBBBBBBBBBBBBB|",
+          "4====2BBBBBBBB1====3",
+          "     |BBBBBBBB|     ",
+          "     |BBBBBBBB|     ",
+          "     |BBBBBBBB|     ",
+          "     |BBBBBBBB|     ",
+          "     |BBBBBBBB|     ",
+          "     |BBBBBBBB|     ",
+          "     4========3     "
+        ];
+      case 2:
+        return [
+          "                    ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBB              ",
+          " BBBBB              ",
+          " BBBBBBBBBBBBBBBBBB ",
+          "|BBBBBBBBBBBBBBBBBB|",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBB       BBBBBBBB ",
+          " BBB       BBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          "               BBBB ",
+          "               BBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBB   BBBBBBBB ",
+          " BB   BB   BBB   BB ",
+          " BB   BB   BBB   BB ",
+          " BBBBBBB   BBBBBBBB ",
+          " BBBBBBB   BBBBBBBB ",
+          " BBBBBBB   BBBBBBBB ",
+          " BB             BBB ",
+          " BB             BBB ",
+          " BB             BBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBBBBBBBBBBBBBBBB ",
+          " BBBB  BBBBBBBBBBBB ",
+          " BBBB  BBBB  BBBBBB ",
+          " BBBB  BBBB  BBBBBB ",
+          "                    "
+        ];
+      case 3:
+        return [];
+    }
+  }
+  __name(loadBackgrounds, "loadBackgrounds");
+
   // code/main.js
   no({
     width: 512,
     heigth: 512,
-    background: [155, 171, 165],
+    background: [0, 0, 0],
     scale: 2
   });
   loadAssets();
@@ -2956,144 +3286,19 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   var FALL_DEATH = 200;
   var ACCUMULATE_FORCE = 0;
   var LASTY = 0;
-  var LEVELS = [
-    [
-      "BBB1==================2BBB",
-      "BBB|                  |BBB",
-      "BBB|                  |BBB",
-      "BBB|                  |BBB",
-      "BBB|              p   |BBB",
-      "BBB|   12        ===  |BBB",
-      "BBB|   43             |BBB",
-      "BBB|                  |BBB",
-      "BBB|                  |BBB",
-      "BBB|              1===3BBB",
-      "BBB|              |BBBBBBB",
-      "BBB|              4===2BBB",
-      "BBB|   12             |BBB",
-      "BBB|   43             |BBB",
-      "BBB|                  |BBB",
-      "BBB|                  |BBB",
-      "BBB|            ^     |BBB",
-      "BBB|   1=2   c  1=2   |BBB",
-      "BBB|   |B|>     |B|   |BBB",
-      "BBB|   4=3   c  4=3   |BBB",
-      "BBB|                  |BBB",
-      "BBB|         c        |BBB",
-      "BBB|                  |BBB",
-      "BBB|                  |BBB",
-      "BBB|      1====2>     |BBB",
-      "BBB|      |BBBB|      |BBB",
-      "BBB|      4====3      |BBB",
-      "BBB|>       v         |BBB",
-      "BBB|                  |BBB",
-      "BBB|                  |BBB",
-      "BBB4====2        1====3BBB",
-      "BBBBBBBB|        |BBBBBBBB",
-      "BBBBBBBB|        |BBBBBBBB",
-      "BBBBBBBB|       <|BBBBBBBB",
-      "BBBBBBBB|        |BBBBBBBB",
-      "BBBBBBBB|        |BBBBBBBB",
-      "BBBBBBBB| ^    c |BBBBBBBB",
-      "BBBBBBBB4========3BBBBBBBB",
-      "BBBBBBBBBBBBBBBBBBBBBBBBBB",
-      "BBBBBBBBBBBBBBBBBBBBBBBBBB"
-    ]
-  ];
-  var levelConf = {
-    width: 16,
-    height: 16,
-    "=": () => [
-      sprite("horizontal_border"),
-      area(),
-      solid(),
-      origin("bot")
-    ],
-    "|": () => [
-      sprite("vertical_border"),
-      area(),
-      solid(),
-      origin("bot")
-    ],
-    "1": () => [
-      sprite("top_left_border"),
-      area(),
-      solid(),
-      origin("bot")
-    ],
-    "2": () => [
-      sprite("top_right_border"),
-      area(),
-      solid(),
-      origin("bot")
-    ],
-    "3": () => [
-      sprite("bottom_right_border"),
-      area(),
-      solid(),
-      origin("bot")
-    ],
-    "4": () => [
-      sprite("bottom_left_border"),
-      area(),
-      solid(),
-      origin("bot")
-    ],
-    "^": () => [
-      sprite("floor_spike"),
-      area({ scale: 0.8 }),
-      solid(),
-      origin("bot"),
-      "danger"
-    ],
-    "v": () => [
-      sprite("roof_spike"),
-      area({ scale: 0.8 }),
-      solid(),
-      origin("bot"),
-      "danger"
-    ],
-    ">": () => [
-      sprite("left_wall_spike"),
-      area({ scale: 0.8 }),
-      solid(),
-      origin("bot"),
-      "danger"
-    ],
-    "<": () => [
-      sprite("right_wall_spike"),
-      area({ scale: 0.8 }),
-      solid(),
-      origin("bot"),
-      "danger"
-    ],
-    "p": () => [
-      sprite("portal"),
-      area(),
-      pos(0, -12),
-      solid(),
-      origin("bot"),
-      "portal"
-    ],
-    "c": () => [
-      sprite("coin"),
-      area(),
-      origin("bot"),
-      "coin"
-    ],
-    "B": () => [
-      sprite("void"),
-      origin("bot")
-    ]
-  };
+  var LEVELS = [loadLevels(1), loadLevels(2), loadLevels(3)];
+  var BACKGROUNDS = [loadBackgrounds(1), loadBackgrounds(2), loadBackgrounds(3)];
+  var START = [[152, 576], [37, 528]];
+  var levelConf = loadConf();
   scene("game", ({ levelId } = { levelId: 0 }) => {
     gravity(3200);
     LASTY = 1e3;
+    const background = addLevel(BACKGROUNDS[levelId != null ? levelId : 0], levelConf);
     const level = addLevel(LEVELS[levelId != null ? levelId : 0], levelConf);
     const player = add([
       sprite("player"),
-      pos(200, 480),
-      area(),
+      pos(START[levelId != null ? levelId : 0]),
+      area({ width: 8, height: 16 }),
       scale(1),
       body(),
       origin("bot")
@@ -3102,11 +3307,12 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     player.onUpdate(() => {
       var currCam = camPos();
       camPos(currCam.x, player.pos.y - 80);
+      console.log(mousePos());
     });
     player.onCollide("danger", () => {
       killed();
     });
-    player.onCollide("portal", () => {
+    player.onCollide("door", () => {
       if (levelId + 1 < LEVELS.length) {
         go("game", {
           levelId: levelId + 1
@@ -3116,8 +3322,10 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       }
     });
     player.onGround(() => {
-      if (player.pos.y - LASTY > FALL_DEATH)
+      if (player.pos.y - LASTY > FALL_DEATH) {
+        player.scale.y = 0.2;
         killed();
+      }
       ACCUMULATE_FALL = 0;
       LASTY = player.pos.y;
     });
@@ -3128,8 +3336,8 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     onKeyDown("space", () => {
       if (player.isGrounded()) {
         if (ACCUMULATE_FORCE < 450)
-          ACCUMULATE_FORCE += 5;
-        player.scale.y = 1 - ACCUMULATE_FORCE / 1e3;
+          ACCUMULATE_FORCE += 10;
+        player.scale.y = 1 - ACCUMULATE_FORCE / 700;
         onKeyRelease("space", () => {
           if (player.isGrounded()) {
             play("pop");

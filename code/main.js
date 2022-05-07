@@ -1,12 +1,16 @@
+
 import kaboom from "kaboom"
 import patrol from "./patrol"
 import loadAssets from "./assets"
 import killed from "./killed"
+import loadLevels from "./levels"
+import loadConf from "./levelConf"
+import loadBackgrounds from "./backgrounds"
 
 kaboom({
   width: 512,
   heigth: 512,
-  background: [155, 171, 165],
+  background: [0,0,0],
   scale: 2
 })
 
@@ -22,159 +26,36 @@ let LASTY = 0
 
 //level 
 
- const LEVELS = [
-	[
-    "BBB1==================2BBB",
-    "BBB|                  |BBB",
-    "BBB|                  |BBB",
-    "BBB|                  |BBB",
-    "BBB|              p   |BBB",
-    "BBB|   12        ===  |BBB",
-    "BBB|   43             |BBB",
-    "BBB|                  |BBB",
-    "BBB|                  |BBB",
-    "BBB|              1===3BBB",
-    "BBB|              |BBBBBBB",
-    "BBB|              4===2BBB",
-    "BBB|   12             |BBB",
-    "BBB|   43             |BBB",
-    "BBB|                  |BBB",
-    "BBB|                  |BBB",
-    "BBB|            ^     |BBB",
-    "BBB|   1=2   c  1=2   |BBB",
-    "BBB|   |B|>     |B|   |BBB",
-    "BBB|   4=3   c  4=3   |BBB",
-    "BBB|                  |BBB",
-    "BBB|         c        |BBB",
-    "BBB|                  |BBB",
-    "BBB|                  |BBB",
-    "BBB|      1====2>     |BBB",
-    "BBB|      |BBBB|      |BBB",
-    "BBB|      4====3      |BBB",
-    "BBB|>       v         |BBB",
-    "BBB|                  |BBB",
-    "BBB|                  |BBB",
-    "BBB4====2        1====3BBB",
-    "BBBBBBBB|        |BBBBBBBB",
-    "BBBBBBBB|        |BBBBBBBB",
-    "BBBBBBBB|       <|BBBBBBBB",
-    "BBBBBBBB|        |BBBBBBBB",
-    "BBBBBBBB|        |BBBBBBBB",
-    "BBBBBBBB| ^    c |BBBBBBBB",
-		"BBBBBBBB4========3BBBBBBBB",
-    "BBBBBBBBBBBBBBBBBBBBBBBBBB",
-    "BBBBBBBBBBBBBBBBBBBBBBBBBB",
-	],   
-]
+const LEVELS = [ loadLevels(1),loadLevels(2),loadLevels(3)]
+const BACKGROUNDS = [loadBackgrounds(1),loadBackgrounds(2),loadBackgrounds(3)]
+const START = [[152,576],[37,528],]
+const levelConf = loadConf()
   // define what each symbol means in the level graph
- const levelConf = {
-	// grid size
-	width: 16, 
-	height: 16,
-	// define each object as a list of components
-	"=": () => [
-		sprite("horizontal_border"),
-		area(),
-		solid(),
-		origin("bot"),
-	],
-   "|": () => [
-		sprite("vertical_border"),
-		area(),
-		solid(),
-		origin("bot"),
-	],
-   "1": () => [
-		sprite("top_left_border"),
-		area(),
-		solid(),
-		origin("bot"),
-	],
-   "2": () => [
-		sprite("top_right_border"),
-		area(),
-		solid(),
-		origin("bot"),
-	],
-   "3": () => [
-		sprite("bottom_right_border"),
-		area(),
-		solid(),
-		origin("bot"),
-	],
-   "4": () => [
-		sprite("bottom_left_border"),
-		area(),
-		solid(),
-		origin("bot"),
-	],
-   "^": () => [
-		sprite("floor_spike"),
-		area({ scale: 0.8, }),
-    solid(),
-		origin("bot"),
-		"danger",
-	],
-    "v": () => [
-		sprite("roof_spike"),
-		area({ scale: 0.8, }),
-    solid(),
-		origin("bot"),
-		"danger",
-	],
-    ">": () => [
-		sprite("left_wall_spike"),
-		area({ scale: 0.8, }),
-    solid(),
-		origin("bot"),
-		"danger",
-	],
-    "<": () => [
-		sprite("right_wall_spike"),
-		area({ scale: 0.8, }),
-    solid(),
-		origin("bot"),
-		"danger",
-	],
-	 "p": () => [
-		sprite("portal"),
-		area(),
-     pos(0,-12),
-    solid(),
-		origin("bot"),
-    "portal",
-	],
-	 "c": () => [
-		sprite("coin"),
-		area(),
-		origin("bot"),
-    "coin",
-	],
-   "B": () => [
-		sprite("void"),
-		origin("bot"),
-	],
-	}
+ 
 
 scene("game", ({ levelId} = { levelId: 0}) => {
 
 	gravity(3200)
-LASTY = 1000
+  LASTY = 1000
+
+  
   
 	// add level to scene
+  const background = addLevel(BACKGROUNDS[levelId ?? 0], levelConf)
 	const level = addLevel(LEVELS[levelId ?? 0], levelConf)
+
   
 	// define player object
 	const player = add([
 		sprite("player"),
-		pos(200  , 480),
-		area(), 
+		pos(START[levelId ?? 0]),
+		area({ width: 8, height: 16. }), 
 		scale(1),
 		// makes it fall to gravity and jumpable
 		body(),
 		origin("bot"),
 	])
-
+ 
    camPos(player.pos.x, player.pos.y-100);    
   
 	// action() runs every frame
@@ -185,14 +66,16 @@ LASTY = 1000
     if (currCam.y > player.pos.y) 
         camPos(currCam.x, player.pos.y);     
     */
+    console.log(mousePos())    
 	})
 
 	// if player onCollide with any obj with "danger" tag, lose
 	player.onCollide("danger", () => {
     killed()   
+
 	})
 
-	player.onCollide("portal", () => {
+	player.onCollide("door", () => {
 		if (levelId + 1 < LEVELS.length) {
 			go("game", {
 				levelId: levelId + 1,
@@ -203,8 +86,10 @@ LASTY = 1000
 	})
 
   player.onGround(() => {  
-    if ( (player.pos.y - LASTY) > FALL_DEATH)
-        killed();
+    if ( (player.pos.y - LASTY) > FALL_DEATH){
+      player.scale.y = 0.2
+      killed()
+    }
     ACCUMULATE_FALL = 0
     LASTY = player.pos.y
   })
@@ -222,12 +107,12 @@ LASTY = 1000
     {  
       // on space down accumulate force
       if  (ACCUMULATE_FORCE < 450)
-              ACCUMULATE_FORCE += 5;
-      player.scale.y = 1-( ACCUMULATE_FORCE/1000)
+              ACCUMULATE_FORCE += 10;
+      player.scale.y = 1-( ACCUMULATE_FORCE/700)
       
       onKeyRelease("space", () => 
         {          
-          // on space release jump with original + accumulate force
+          // on space release jump with original + accumulate force     
         if (player.isGrounded()) 
         {
           play("pop")

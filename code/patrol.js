@@ -11,7 +11,7 @@ export default function patrol(speed = 60, dir = 1) {
 			})
 		},
 		update() {
-			this.move(speed * dir, 0)
-		},
-	}
+			      this.move(speed * dir, 0);
+		}, 
+	} 
 }
