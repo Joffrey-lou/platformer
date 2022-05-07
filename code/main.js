@@ -1,19 +1,22 @@
-
 import kaboom from "kaboom"
 import patrol from "./patrol"
 import loadAssets from "./assets"
 import killed from "./killed"
 import loadLevels from "./levels"
-import loadConf from "./levelConf"
+import loadLevelConf from "./levelConf"
 import loadBackgrounds from "./backgrounds"
+import loadBackgroundConf from "./backgroundConf"
+
+// windows settings
 
 kaboom({
   width: 512,
   heigth: 512,
   background: [0,0,0],
-  scale: 2
+  scale: 2,
 })
 
+//load sprite
 loadAssets()
 
 // define some constants
@@ -24,24 +27,34 @@ const FALL_DEATH = 200
 let ACCUMULATE_FORCE = 0
 let LASTY = 0
 
-//level 
+//level definition
+const LEVELS = [ loadLevels(1),loadLevels(2),loadLevels(3),loadLevels(4)]
+const BACKGROUNDS =[loadBackgrounds(1),loadBackgrounds(2),loadBackgrounds(3),loadBackgrounds(4)]
+const START = [[152,576],[37,528],[260,520],[280,60]]
+const DIRECTION = ['t','t','t','b']
+const backgroundConf = loadBackgroundConf()
+const levelConf = loadLevelConf()
+const sectionName = ["Complex","","","","",""]
 
-const LEVELS = [ loadLevels(1),loadLevels(2),loadLevels(3)]
-const BACKGROUNDS = [loadBackgrounds(1),loadBackgrounds(2),loadBackgrounds(3)]
-const START = [[152,576],[37,528],]
-const levelConf = loadConf()
-  // define what each symbol means in the level graph
- 
+//menu
+scene("menu", () => {
+	add([
+		text("press space to start",{size : 24}),
+    pos(vec2(160, 120)),
+    origin("center"),
+    color(255, 255, 255),
+	])
+	onKeyPress(() => go("game"))
+})
 
+// game scenes
 scene("game", ({ levelId} = { levelId: 0}) => {
 
 	gravity(3200)
   LASTY = 1000
 
-  
-  
 	// add level to scene
-  const background = addLevel(BACKGROUNDS[levelId ?? 0], levelConf)
+  const background = addLevel(BACKGROUNDS[levelId ?? 0], backgroundConf)
 	const level = addLevel(LEVELS[levelId ?? 0], levelConf)
 
   
@@ -55,36 +68,52 @@ scene("game", ({ levelId} = { levelId: 0}) => {
 		body(),
 		origin("bot"),
 	])
- 
-   camPos(player.pos.x, player.pos.y-100);    
+
+  //define default cam position
+  camPos(152, player.pos.y-100);    
+
+  add([
+    text(sectionName[Math.round((levelId+1)/10)] + " - " + (levelId + 1), { size: 24 }),
+    pos(155,player.pos.y - 150),
+    color(255, 255, 255),
+    origin("center"),
+    layer('ui'),
+    lifespan(1, { fade: 0.5 })
+  ]);
+
+   
   
 	// action() runs every frame
 	player.onUpdate(() => {    
     var currCam = camPos()
-    camPos(currCam.x,player.pos.y - 80)
-		/* center camera to player when go up
-    if (currCam.y > player.pos.y) 
-        camPos(currCam.x, player.pos.y);     
-    */
-    console.log(mousePos())    
-	})
+    switch(DIRECTION[levelId ?? 0]){
+      case 't':
+        camPos(currCam.x,player.pos.y - 80)
+        break;
+      case 'b':
+        camPos(currCam.x,player.pos.y + 80)
+        break;
+    }  
+  })
+
 
 	// if player onCollide with any obj with "danger" tag, lose
 	player.onCollide("danger", () => {
     killed()   
-
 	})
-
+  
+ // door start next level
 	player.onCollide("door", () => {
 		if (levelId + 1 < LEVELS.length) {
 			go("game", {
 				levelId: levelId + 1,
  			})
 		} else {
-			go("win")
+			go("menu")
 		}
 	})
 
+  //detect fall length and  kill player if too high
   player.onGround(() => {  
     if ( (player.pos.y - LASTY) > FALL_DEATH){
       player.scale.y = 0.2
@@ -94,25 +123,26 @@ scene("game", ({ levelId} = { levelId: 0}) => {
     LASTY = player.pos.y
   })
 
+  //collect coin
   player.onCollide("coin", (coin) => {
     play("collect")
     destroy(coin)
 })
 
-	// jump
+	// detect when space is down
 	onKeyDown("space", () => 
     {
       
 		if (player.isGrounded()) 
     {  
-      // on space down accumulate force
+      // accumulate force until a certain point
       if  (ACCUMULATE_FORCE < 450)
               ACCUMULATE_FORCE += 10;
       player.scale.y = 1-( ACCUMULATE_FORCE/700)
       
       onKeyRelease("space", () => 
         {          
-          // on space release jump with original + accumulate force     
+          //when space release jump hight =  base jump force + accumulate force  
         if (player.isGrounded()) 
         {
           play("pop")
@@ -124,12 +154,13 @@ scene("game", ({ levelId} = { levelId: 0}) => {
 		}
 	})
 
+  //move left only if in the air
 	onKeyDown("left", () => {
 		if (!player.isGrounded()){
       player.move(-MOVE_SPEED, 0)
     }
 	})
-
+  //move right only if in the air
 	onKeyDown("right", () => {
     if (!player.isGrounded()){
       player.move(MOVE_SPEED, 0)
@@ -137,17 +168,12 @@ scene("game", ({ levelId} = { levelId: 0}) => {
 		
 	})
 
- onKeyPress("f", () => {
+ 
+  //active fullscreen  when "f" is press 
+ onKeyPress("f", () => {  
 		fullscreen(!fullscreen())
 	})
 
 })
 
-scene("win", () => {
-	add([
-		text("You Win"),
-	])
-	onKeyPress(() => go("game"))
-})
-
-go("game")
+go("menu")

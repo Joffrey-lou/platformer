@@ -2936,18 +2936,50 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     loadSprite("enemy", "sprites/enemy.png");
     loadSprite("coin", "sprites/coin.png");
     loadSprite("background", "sprites/background.png");
+    loadSprite("cube", "sprites/cube.png");
     loadSprite("floor_spike", "sprites/spike/spike_0.png");
     loadSprite("left_wall_spike", "sprites/spike/spike_1.png");
     loadSprite("roof_spike", "sprites/spike/spike_2.png");
     loadSprite("right_wall_spike", "sprites/spike/spike_3.png");
-    loadSprite("hidden_floor_spike_0", "sprites/hidden_spike/floor_spike_0.png");
-    loadSprite("hidden_floor_spike_1", "sprites/hidden_spike/floor_spike_1.png");
     loadSprite("horizontal_border", "sprites/border/border_0.png");
     loadSprite("vertical_border", "sprites/border/border_1.png");
     loadSprite("top_left_border", "sprites/border/border_2.png");
     loadSprite("top_right_border", "sprites/border/border_3.png");
     loadSprite("bottom_right_border", "sprites/border/border_4.png");
     loadSprite("bottom_left_border", "sprites/border/border_5.png");
+    loadSprite("left_end_border", "sprites/border/border_6.png");
+    loadSprite("right_end_border", "sprites/border/border_7.png");
+    loadSprite("top_end_border", "sprites/border/border_8.png");
+    loadSprite("bottom_end_border", "sprites/border/border_9.png");
+    loadSprite("vertical_track", "sprites/track/track_0.png");
+    loadSprite("horizontal_track", "sprites/track/track_1.png");
+    loadSprite("bottom_end_track", "sprites/track/track_2.png");
+    loadSprite("top_end_track", "sprites/track/track_3.png");
+    loadSprite("right_end_track", "sprites/track/track_4.png");
+    loadSprite("left_end_track", "sprites/track/track_5.png");
+    loadSprite("conveyor", "/sprites/conveyor.png", {
+      sliceX: 6,
+      anims: {
+        "right": {
+          from: 0,
+          to: 1,
+          speed: 2,
+          loop: true
+        },
+        "center": {
+          from: 2,
+          to: 3,
+          speed: 2,
+          loop: true
+        },
+        "left": {
+          from: 4,
+          to: 5,
+          speed: 2,
+          loop: true
+        }
+      }
+    });
     loadSound("pop", "sounds/pop.mp3");
     loadSound("hit", "sounds/explode.mp3");
     loadSound("collect", "sounds/coin.wav");
@@ -2970,16 +3002,16 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       case 1:
         return [
           "1==================2",
-          "|   c              |",
-          "|    c             |",
-          "|   c              |",
-          "|    c         p   |",
-          "|   12        ===  |",
-          "|   43             |",
           "|                  |",
           "|                  |",
+          "|                  |",
+          "|           ^  p   |",
+          "|        1======]  |",
+          "|       ^|         |",
+          "|      [=3     c   |",
+          "|   c             ^|",
           "|              1===3",
-          "|              |",
+          "|   c          |",
           "|              4===2",
           "|   12             |",
           "|   43             |",
@@ -2997,8 +3029,8 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           "|      |    |      |",
           "|      4====3      |",
           "|>       v         |",
-          "|                  |",
-          "|   ^            e |",
+          "| c             c  |",
+          "|   ^              |",
           "4====2        1====3",
           "     |        |     ",
           "     |        |     ",
@@ -3011,8 +3043,8 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       case 2:
         return [
           "1==================2",
-          "|      c   c       |",
           "|                  |",
+          "|      c   c       |",
           "|                  |",
           "|                  |",
           "|     ^  ^  ^   p  |",
@@ -3049,11 +3081,11 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       case 3:
         return [
           "1==================2",
-          "|                  |",
-          "| c                |",
-          "| c                |",
-          "| c                |",
-          "|               p  |",
+          "|         |        |",
+          "| c       |        |",
+          "| c       |        |",
+          "| c       |        |",
+          "|         |  c  p  |",
           "| 12     12     12 |",
           "| 43     43     43 |",
           "|         v      c |",
@@ -3063,33 +3095,157 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           "|  12              |",
           "|  43              |",
           "|                  |",
-          "|  c  ^            |",
-          "|     1=====2      |",
+          "|            c     |",
+          "|     ^  ^         |",
+          "|     1=====2   c  |",
           "|     4====2|      |",
-          "|         <||      |",
-          "| c     c <||      |",
-          "|         <13      |",
-          "|             1====3",
-          "|             4====2",
-          "|                  |",
+          "|         <||   c  |",
+          "|       c <||      |",
+          "|         <43  ^   |",
+          "|              1===3",
+          "| c            4===2",
+          "|    ^             |",
           "|   1===2          |",
-          "|   |   |          |",
-          "|   |   |          |",
-          "|   |   |c^ ^   c  |",
-          "|   |   4==========3",
-          "|   4==============2",
+          "|   4=2 |          |",
+          "|     | |       c  |",
+          "|     | |    ^   ^ |",
+          "|     | 4==========3",
+          "|     4============2",
+          "|                  |",
           "|                  |",
           "|       1=2        |",
-          "|       | |        |",
-          "| c ^ c | |        |",
+          "| c ^ c | |  ^     |",
           "4=======3 4========3"
+        ];
+      case 4:
+        return [
+          "1==================2",
+          "|v                 |",
+          "| cc               |",
+          "| cc               |",
+          "| cc               |",
+          "|===>              |",
+          "|                  |",
+          "|        c         |",
+          "|            ^     |",
+          "|            1=====3",
+          "|      ^     4=====2",
+          "|      n          v|",
+          "|      |=2         |",
+          "|      4=3         |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "| ccc   c          |",
+          "|                  |",
+          "4===2              |",
+          "    |   ^          |",
+          "1===3>  1=2    c   |",
+          "|       4=3        |",
+          "|            ^     |",
+          "|     c      1==2  |",
+          "|     0      4==3  |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|                c |",
+          "| p       c        |",
+          "4===2            1=3",
+          "    |            4=2",
+          "    |^^^^1===2^^^^^|",
+          "    4====3   4=====3"
+        ];
+      case 5:
+        return [
+          "1==================2",
+          "|vvvvvvvvvvvvvvvvvv|",
+          "|                  |",
+          "|        c         |",
+          "|   c         c    |",
+          "|>                 |",
+          "|     n           <|",
+          "|    <|            |",
+          "|     |  ^         |",
+          "|>    |====]       |",
+          "|     |            |",
+          "| p   |            |",
+          "|=====3       [====|",
+          "|              vv  |",
+          "|        c         |",
+          "|                  |",
+          "|                  |",
+          "| ^                |",
+          "4=====2            |",
+          "      |>           |",
+          "1=====3            |",
+          "|             c    |",
+          "|                  |",
+          "|            1=2   |",
+          "|           <4=3   |",
+          "|                  |",
+          "|                  |",
+          "|  c  1====6       |",
+          "|  c  |    |       |",
+          "|  c  |    |       |",
+          "|^^c^^|    |^^^^^^^|",
+          "4=====3    4=======3"
         ];
     }
   }
   __name(loadLevels, "loadLevels");
 
+  // code/spike_ball.js
+  function spike_ball(speed = 120, dir = 1) {
+    return {
+      id: "patrol",
+      require: ["pos", "area"],
+      add() {
+        this.on("collide", (obj, col) => {
+          if (col.isLeft() || col.isRight()) {
+            dir = -dir;
+          }
+        });
+      },
+      update() {
+        if (!this.isGrounded())
+          this.move(speed * dir, 0);
+        if (this.isGrounded()) {
+          this.jump(500);
+          play("pop");
+        }
+      }
+    };
+  }
+  __name(spike_ball, "spike_ball");
+
+  // code/slider.js
+  function slider(rot, speed = 1, dir = 1) {
+    return {
+      id: "platform",
+      require: ["pos", "area"],
+      add() {
+        this.onCollide("slider_end", () => {
+          dir = -dir;
+        });
+      },
+      update() {
+        switch (rot) {
+          case "v":
+            this.pos.y -= speed / 4 * dir;
+            break;
+          case "h":
+            this.pos.x -= speed / 4 * dir;
+            break;
+        }
+      }
+    };
+  }
+  __name(slider, "slider");
+
   // code/levelConf.js
-  function loadConf() {
+  function loadLevelConf() {
     return {
       width: 16,
       height: 16,
@@ -3180,98 +3336,272 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
         solid(),
         area({ width: 16, height: 6 }),
         patrol()
+      ],
+      "s": () => [
+        sprite("enemy"),
+        origin("bot"),
+        solid(),
+        body(),
+        area({ width: 8, height: 8 }),
+        initPos = this.pos(),
+        spike_ball(),
+        "danger"
+      ],
+      "-": () => [
+        sprite("cube"),
+        origin("bot"),
+        solid(),
+        area(),
+        slider("h")
+      ],
+      "+": () => [
+        sprite("cube"),
+        origin("bot"),
+        solid(),
+        area(),
+        slider("v")
+      ],
+      "0": () => [
+        sprite("cube"),
+        origin("bot"),
+        solid(),
+        area(),
+        scale(0.5)
+      ],
+      "]": () => [
+        sprite("left_end_border"),
+        origin("bot"),
+        solid(),
+        area()
+      ],
+      "[": () => [
+        sprite("right_end_border"),
+        origin("bot"),
+        solid(),
+        area()
+      ],
+      "n": () => [
+        sprite("top_end_border"),
+        origin("bot"),
+        solid(),
+        area()
+      ],
+      "u": () => [
+        sprite("bottom_end_border"),
+        origin("bot"),
+        solid(),
+        area()
       ]
     };
   }
-  __name(loadConf, "loadConf");
+  __name(loadLevelConf, "loadLevelConf");
 
   // code/backgrounds.js
   function loadBackgrounds(p) {
     switch (p) {
       case 1:
         return [
-          "1==================2",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBB    ",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBB BBBBBBBB BBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "|BBBBBBBBBBBBBBBBBB|",
-          "4====2BBBBBBBB1====3",
-          "     |BBBBBBBB|     ",
-          "     |BBBBBBBB|     ",
-          "     |BBBBBBBB|     ",
-          "     |BBBBBBBB|     ",
-          "     |BBBBBBBB|     ",
-          "     |BBBBBBBB|     ",
-          "     4========3     "
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                BBBB",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "     B        B     ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "        BBBB        ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "BBBBB          BBBBB",
+          "BBBBB          BBBBB",
+          "BBBBB          BBBBB",
+          "BBBBB          BBBBB",
+          "BBBBB          BBBBB",
+          "BBBBB          BBBBB",
+          "BBBBB          BBBBB"
         ];
       case 2:
         return [
           "                    ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBB              ",
-          " BBBBB              ",
-          " BBBBBBBBBBBBBBBBBB ",
-          "|BBBBBBBBBBBBBBBBBB|",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBB       BBBBBBBB ",
-          " BBB       BBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          "               BBBB ",
-          "               BBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBB   BBBBBBBB ",
-          " BB   BB   BBB   BB ",
-          " BB   BB   BBB   BB ",
-          " BBBBBBB   BBBBBBBB ",
-          " BBBBBBB   BBBBBBBB ",
-          " BBBBBBB   BBBBBBBB ",
-          " BB             BBB ",
-          " BB             BBB ",
-          " BB             BBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBBBBBBBBBBBBBBBB ",
-          " BBBB  BBBBBBBBBBBB ",
-          " BBBB  BBBB  BBBBBB ",
-          " BBBB  BBBB  BBBBBB ",
-          "                    "
+          "B                  B",
+          "B                  B",
+          "B                  B",
+          "B                  B",
+          "B                  B",
+          "B     BBBBBBBBBBBBBB",
+          "B     BBBBBBBBBBBBBB",
+          "B                  B",
+          "B                  B",
+          "B                  B",
+          "B   BBBBBBB        B",
+          "B                  B",
+          "B                  B",
+          "B                  B",
+          "BBBBBBBBBBBBBBB    B",
+          "BBBBBBBBBBBBBBB    B",
+          "B                  B",
+          "B                  B",
+          "B       BBB        B",
+          "B  BBB  BBB   BBB  B",
+          "B  BBB  BBB   BBB  B",
+          "B       BBB        B",
+          "B       BBB        B",
+          "B       BBB        B",
+          "B  BBBBBBBBBBBBB   B",
+          "B  BBBBBBBBBBBBB   B",
+          "B  BBBBBBBBBBBBB   B",
+          "B                  B",
+          "B                  B",
+          "B                  B",
+          "B    BB            B",
+          "B    BB    BB      B",
+          "B    BB    BB      B",
+          "BBBBBBBBBBBBBBBBBBBB"
         ];
       case 3:
-        return [];
+        return [
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "       B            ",
+          "       B            ",
+          "       B            ",
+          "       B            ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "         BB         ",
+          "         BB         "
+        ];
+      case 4:
+        return [
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "BBBB                ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "BBBB                ",
+          "BBBB                ",
+          "BBBB      BBB       "
+        ];
     }
   }
   __name(loadBackgrounds, "loadBackgrounds");
+
+  // code/backgroundConf.js
+  function loadBackgroundConf() {
+    return {
+      width: 16,
+      height: 16,
+      " ": () => [
+        sprite("background"),
+        origin("bot")
+      ],
+      "|": () => [
+        sprite("vertical_track"),
+        origin("bot")
+      ],
+      "=": () => [
+        sprite("horizontal_track"),
+        origin("bot")
+      ],
+      "<": () => [
+        sprite("left_end_track"),
+        origin("bot")
+      ],
+      "v": () => [
+        sprite("bottom_end_track"),
+        origin("bot")
+      ],
+      "^": () => [
+        sprite("top_end_track"),
+        origin("bot")
+      ],
+      ">": () => [
+        sprite("right_end_track"),
+        origin("bot")
+      ],
+      "e": () => [
+        sprite("background"),
+        origin("bot"),
+        area({ width: 2, height: 2 }),
+        "slider_end"
+      ]
+    };
+  }
+  __name(loadBackgroundConf, "loadBackgroundConf");
 
   // code/main.js
   no({
@@ -3286,14 +3616,26 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   var FALL_DEATH = 200;
   var ACCUMULATE_FORCE = 0;
   var LASTY = 0;
-  var LEVELS = [loadLevels(1), loadLevels(2), loadLevels(3)];
-  var BACKGROUNDS = [loadBackgrounds(1), loadBackgrounds(2), loadBackgrounds(3)];
-  var START = [[152, 576], [37, 528]];
-  var levelConf = loadConf();
+  var LEVELS = [loadLevels(1), loadLevels(2), loadLevels(3), loadLevels(4)];
+  var BACKGROUNDS = [loadBackgrounds(1), loadBackgrounds(2), loadBackgrounds(3), loadBackgrounds(4)];
+  var START = [[152, 576], [37, 528], [260, 520], [280, 60]];
+  var DIRECTION = ["t", "t", "t", "b"];
+  var backgroundConf = loadBackgroundConf();
+  var levelConf = loadLevelConf();
+  var sectionName = ["Complex", "", "", "", "", ""];
+  scene("menu", () => {
+    add([
+      text("press space to start", { size: 24 }),
+      pos(vec2(160, 120)),
+      origin("center"),
+      color(255, 255, 255)
+    ]);
+    onKeyPress(() => go("game"));
+  });
   scene("game", ({ levelId } = { levelId: 0 }) => {
     gravity(3200);
     LASTY = 1e3;
-    const background = addLevel(BACKGROUNDS[levelId != null ? levelId : 0], levelConf);
+    const background = addLevel(BACKGROUNDS[levelId != null ? levelId : 0], backgroundConf);
     const level = addLevel(LEVELS[levelId != null ? levelId : 0], levelConf);
     const player = add([
       sprite("player"),
@@ -3303,11 +3645,25 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       body(),
       origin("bot")
     ]);
-    camPos(player.pos.x, player.pos.y - 100);
+    camPos(152, player.pos.y - 100);
+    add([
+      text(sectionName[Math.round((levelId + 1) / 10)] + " - " + (levelId + 1), { size: 24 }),
+      pos(155, player.pos.y - 150),
+      color(255, 255, 255),
+      origin("center"),
+      layer("ui"),
+      lifespan(1, { fade: 0.5 })
+    ]);
     player.onUpdate(() => {
       var currCam = camPos();
-      camPos(currCam.x, player.pos.y - 80);
-      console.log(mousePos());
+      switch (DIRECTION[levelId != null ? levelId : 0]) {
+        case "t":
+          camPos(currCam.x, player.pos.y - 80);
+          break;
+        case "b":
+          camPos(currCam.x, player.pos.y + 80);
+          break;
+      }
     });
     player.onCollide("danger", () => {
       killed();
@@ -3318,7 +3674,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           levelId: levelId + 1
         });
       } else {
-        go("win");
+        go("menu");
       }
     });
     player.onGround(() => {
@@ -3362,12 +3718,6 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       fullscreen(!fullscreen());
     });
   });
-  scene("win", () => {
-    add([
-      text("You Win")
-    ]);
-    onKeyPress(() => go("game"));
-  });
-  go("game");
+  go("menu");
 })();
 //# sourceMappingURL=game.js.map

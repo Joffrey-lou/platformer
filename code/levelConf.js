@@ -1,6 +1,8 @@
 import patrol from "./patrol"
+import spike_ball from "./spike_ball"
+import slider from "./slider"
 
-export default function loadConf() {
+export default function loadLevelConf() {
   return {
 	// grid size
 	width: 16, 
@@ -94,5 +96,83 @@ export default function loadConf() {
     area({ width: 16, height: 6. }),
     patrol()
 	],
+    "s": () => [
+		sprite("enemy"),
+		origin("bot"),
+    solid(), 
+    body(), 
+    area({ width: 8, height: 8. }),
+    initPos = this.pos(),
+    spike_ball(),
+    "danger"
+	],
+    "-": () => [
+		sprite("cube"),
+		origin("bot"),
+    solid(), 
+    area(),
+    slider('h'),
+	],
+    "+": () => [
+		sprite("cube"),
+		origin("bot"),
+    solid(), 
+    area(),
+    slider('v'),
+	],
+    "0": () => [
+		sprite("cube"),
+		origin("bot"),
+    solid(), 
+    area(),
+    scale(0.5),
+  ],
+  "]": () => [
+		sprite("left_end_border"),
+		origin("bot"),
+    solid(), 
+    area(),
+  ],
+  "[": () => [
+		sprite("right_end_border"),
+		origin("bot"),
+    solid(), 
+    area(),
+  ],
+  "n": () => [
+		sprite("top_end_border"),
+		origin("bot"),
+    solid(), 
+    area(),
+  ],
+  "u": () => [
+		sprite("bottom_end_border"),
+		origin("bot"),
+    solid(), 
+    area(),
+  ],
+    /*
+   "r": () => [
+		sprite("conveyor", {anim: "right", }),
+		origin("bot"),
+    solid(), 
+    area({scale: 0.9 }),
+    "conveyor",
+	],
+   "C": () => [
+		sprite("conveyor", {anim: "center", }),
+		origin("bot"),
+    solid(), 
+    area({scale: 0.9 }),
+    "conveyor",
+	],
+  "l": () => [
+		sprite("conveyor", {anim: "left", }),
+		origin("bot"),
+    solid(), 
+    area({scale: 0.9 }),
+    "conveyor",
+	],
+    */
  }
 }
