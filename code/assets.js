@@ -4,7 +4,8 @@ export default function loadAssets() {
   
 	loadSprite("player", "sprites/player.png");
   loadSprite("door", "sprites/door.png");
-  loadSprite("enemy", "sprites/enemy.png");
+  loadSprite("spike_ball", "sprites/spike_ball.png");
+  loadSprite("red_ball", "sprites/red_ball.png");
 	loadSprite("coin", "sprites/coin.png");
   loadSprite("background", "sprites/background.png");
   loadSprite("cube", "sprites/cube.png");
@@ -35,6 +36,13 @@ export default function loadAssets() {
   loadSprite("top_end_track", "sprites/track/track_3.png");
   loadSprite("right_end_track", "sprites/track/track_4.png");
   loadSprite("left_end_track", "sprites/track/track_5.png");
+
+  //complex cannon
+
+    loadSprite("right_cannon", "sprites/canon/canon_0.png");
+    loadSprite("left_cannon", "sprites/canon/canon_1.png");
+    loadSprite("top_cannon", "sprites/canon/canon_2.png");
+    loadSprite("bottom_cannon", "sprites/canon/canon_3.png");
 
   //complexe roll
 
@@ -71,7 +79,7 @@ export default function loadAssets() {
   
   //sound
 
-  loadSound("pop", "sounds/pop.mp3");
+  loadSound("pop", "sounds/pop.wav");
   loadSound("hit", "sounds/explode.mp3");
   loadSound("collect", "sounds/coin.wav");
 }

@@ -1,6 +1,6 @@
-import patrol from "./patrol"
-import spike_ball from "./spike_ball"
-import slider from "./slider"
+import patrol from "../behavior/patrol"
+import spike_ball from "../object/spike_ball"
+import slider from "../object/slider"
 
 export default function loadLevelConf() {
   return {
@@ -13,36 +13,42 @@ export default function loadLevelConf() {
 		area(),
 		solid(),
 		origin("bot"),
+    layer("lvl"),
 	],
    "|": () => [
 		sprite("vertical_border"),
 		area(),
 		solid(),
 		origin("bot"),
+    layer("lvl"),
 	],
    "1": () => [
 		sprite("top_left_border"),
 		area(),
 		solid(),
 		origin("bot"),
+    layer("lvl"),
 	],
    "2": () => [
 		sprite("top_right_border"),
 		area(),
 		solid(),
 		origin("bot"),
+    layer("lvl"),
 	],
    "3": () => [
 		sprite("bottom_right_border"),
 		area(),
 		solid(),
 		origin("bot"),
+    layer("lvl"),
 	],
    "4": () => [
 		sprite("bottom_left_border"),
 		area(),
 		solid(),
 		origin("bot"),
+    layer("lvl"),
 	],
    "^": () => [
 		sprite("floor_spike"),
@@ -50,6 +56,8 @@ export default function loadLevelConf() {
     solid(),
 		origin("bot"),
 		"danger",
+    "spike",
+    layer("lvl"),
 	],
     "v": () => [
 		sprite("roof_spike"),
@@ -57,6 +65,8 @@ export default function loadLevelConf() {
     solid(),
 		origin("bot"),
 		"danger",
+    "spike",
+    layer("lvl"),
 	],
     ">": () => [
 		sprite("left_wall_spike"),
@@ -64,6 +74,8 @@ export default function loadLevelConf() {
     solid(),
 		origin("bot"),
 		"danger",
+    "spike",
+    layer("lvl"),
 	],
     "<": () => [
 		sprite("right_wall_spike"),
@@ -71,6 +83,8 @@ export default function loadLevelConf() {
     solid(),
 		origin("bot"),
 		"danger",
+    "spike",
+    layer("lvl"),
 	],
 	 "p": () => [
 		sprite("door"),
@@ -78,40 +92,37 @@ export default function loadLevelConf() {
     solid(),
 		origin("bot"),
     "door",
+    layer("lvl"),
 	],
 	 "c": () => [
 		sprite("coin"),
 		area(),
 		origin("bot"),
     "coin",
+    layer("lvl"),
 	],
    "B": () => [
 		sprite("background"),
 		origin("bot"),
+    layer("lvl"),
 	],
     "e": () => [
 		sprite("enemy"),
 		origin("bot"),
     solid(), 
     area({ width: 16, height: 6. }),
-    patrol()
+    patrol(),
+    layer("lvl"),
 	],
     "s": () => [
-		sprite("enemy"),
+		sprite("spike_ball"),
 		origin("bot"),
     solid(), 
     body(), 
     area({ width: 8, height: 8. }),
-    initPos = this.pos(),
     spike_ball(),
-    "danger"
-	],
-    "-": () => [
-		sprite("cube"),
-		origin("bot"),
-    solid(), 
-    area(),
-    slider('h'),
+    "danger",
+    layer("lvl"),
 	],
     "+": () => [
 		sprite("cube"),
@@ -119,6 +130,7 @@ export default function loadLevelConf() {
     solid(), 
     area(),
     slider('v'),
+    layer("lvl"),
 	],
     "0": () => [
 		sprite("cube"),
@@ -126,30 +138,51 @@ export default function loadLevelConf() {
     solid(), 
     area(),
     scale(0.5),
+    layer("lvl"),
   ],
   "]": () => [
 		sprite("left_end_border"),
 		origin("bot"),
     solid(), 
     area(),
+    layer("lvl"),
   ],
   "[": () => [
 		sprite("right_end_border"),
 		origin("bot"),
     solid(), 
     area(),
+    layer("lvl"),
   ],
   "n": () => [
 		sprite("top_end_border"),
 		origin("bot"),
     solid(), 
     area(),
+    layer("lvl"),
   ],
   "u": () => [
 		sprite("bottom_end_border"),
 		origin("bot"),
     solid(), 
     area(),
+    layer("lvl"),
+  ],
+  "(": () => [
+		sprite("right_cannon"),
+		origin("bot"),
+    solid(), 
+    area({ width: 8, height: 14. }),
+    layer("lvl"),
+    "cannon_right",
+  ],
+   ")": () => [
+		sprite("left_cannon"),
+		origin("bot"),
+    solid(), 
+    area({ width: 8, height: 14. }),
+    layer("lvl"),
+    "cannon_left",
   ],
     /*
    "r": () => [

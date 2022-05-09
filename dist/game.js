@@ -2910,30 +2910,12 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     return ye;
   }, "default");
 
-  // code/patrol.js
-  function patrol(speed = 60, dir = 1) {
-    return {
-      id: "patrol",
-      require: ["pos", "area"],
-      add() {
-        this.on("collide", (obj, col) => {
-          if (col.isLeft() || col.isRight()) {
-            dir = -dir;
-          }
-        });
-      },
-      update() {
-        this.move(speed * dir, 0);
-      }
-    };
-  }
-  __name(patrol, "patrol");
-
   // code/assets.js
   function loadAssets() {
     loadSprite("player", "sprites/player.png");
     loadSprite("door", "sprites/door.png");
-    loadSprite("enemy", "sprites/enemy.png");
+    loadSprite("spike_ball", "sprites/spike_ball.png");
+    loadSprite("red_ball", "sprites/red_ball.png");
     loadSprite("coin", "sprites/coin.png");
     loadSprite("background", "sprites/background.png");
     loadSprite("cube", "sprites/cube.png");
@@ -2957,6 +2939,10 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     loadSprite("top_end_track", "sprites/track/track_3.png");
     loadSprite("right_end_track", "sprites/track/track_4.png");
     loadSprite("left_end_track", "sprites/track/track_5.png");
+    loadSprite("right_cannon", "sprites/canon/canon_0.png");
+    loadSprite("left_cannon", "sprites/canon/canon_1.png");
+    loadSprite("top_cannon", "sprites/canon/canon_2.png");
+    loadSprite("bottom_cannon", "sprites/canon/canon_3.png");
     loadSprite("conveyor", "/sprites/conveyor.png", {
       sliceX: 6,
       anims: {
@@ -2980,13 +2966,13 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
         }
       }
     });
-    loadSound("pop", "sounds/pop.mp3");
+    loadSound("pop", "sounds/pop.wav");
     loadSound("hit", "sounds/explode.mp3");
     loadSound("collect", "sounds/coin.wav");
   }
   __name(loadAssets, "loadAssets");
 
-  // code/killed.js
+  // code/behavior/killed.js
   function killed() {
     play("hit");
     shake(60);
@@ -2996,7 +2982,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   }
   __name(killed, "killed");
 
-  // code/levels.js
+  // code/world/levels.js
   function loadLevels(p) {
     switch (p) {
       case 1:
@@ -3134,18 +3120,18 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           "|      |=2         |",
           "|      4=3         |",
           "|                  |",
+          "|                 (|",
           "|                  |",
           "|                  |",
-          "|                  |",
-          "| ccc   c          |",
+          "| ccc              |",
           "|                  |",
           "4===2              |",
           "    |   ^          |",
           "1===3>  1=2    c   |",
           "|       4=3        |",
           "|            ^     |",
-          "|     c      1==2  |",
-          "|     0      4==3  |",
+          "|     c      1=2   |",
+          "|     0      4=3   |",
           "|                  |",
           "|                  |",
           "|                  |",
@@ -3162,6 +3148,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           "1==================2",
           "|vvvvvvvvvvvvvvvvvv|",
           "|                  |",
+          "|                  |",
           "|        c         |",
           "|   c         c    |",
           "|>                 |",
@@ -3170,23 +3157,36 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           "|     |  ^         |",
           "|>    |====]       |",
           "|     |            |",
-          "| p   |            |",
-          "|=====3       [====|",
+          "| p   |           (|",
+          "|=====3            |",
+          "|                  |",
+          "|             1====3",
+          "|             |     ",
+          "|)         [=======2",
           "|              vv  |",
-          "|        c         |",
+          "|       c          |",
+          "|                  |",
+          "|       c          |",
+          "|                  |",
+          "| c     c          |",
+          "|                  |",
+          "4==2   [n]         |",
+          "   |^^^^|   <12>   |",
+          "1=======3   <43>   |",
           "|                  |",
           "|                  |",
-          "| ^                |",
-          "4=====2            |",
-          "      |>           |",
-          "1=====3            |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
+          "|                  |",
           "|             c    |",
           "|                  |",
-          "|            1=2   |",
-          "|           <4=3   |",
+          "|           <1=2>  |",
+          "|           <4=3>  |",
           "|                  |",
           "|                  |",
-          "|  c  1====6       |",
+          "|  c  1====2       |",
           "|  c  |    |       |",
           "|  c  |    |       |",
           "|^^c^^|    |^^^^^^^|",
@@ -3196,10 +3196,29 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   }
   __name(loadLevels, "loadLevels");
 
-  // code/spike_ball.js
-  function spike_ball(speed = 120, dir = 1) {
+  // code/behavior/patrol.js
+  function patrol(speed = 60, dir = 1) {
     return {
       id: "patrol",
+      require: ["pos", "area"],
+      add() {
+        this.on("collide", (obj, col) => {
+          if (col.isLeft() || col.isRight()) {
+            dir = -dir;
+          }
+        });
+      },
+      update() {
+        this.move(speed * dir, 0);
+      }
+    };
+  }
+  __name(patrol, "patrol");
+
+  // code/object/spike_ball.js
+  function spike_ball(speed = 120, dir = 1) {
+    return {
+      id: "spike_ball",
       require: ["pos", "area"],
       add() {
         this.on("collide", (obj, col) => {
@@ -3220,14 +3239,16 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   }
   __name(spike_ball, "spike_ball");
 
-  // code/slider.js
-  function slider(rot, speed = 1, dir = 1) {
+  // code/object/slider.js
+  function slider(rot, speed = 2, dir = 1) {
     return {
       id: "platform",
       require: ["pos", "area"],
       add() {
         this.onCollide("slider_end", () => {
           dir = -dir;
+        });
+        this.onCollide("spike", (spike) => {
         });
       },
       update() {
@@ -3244,7 +3265,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   }
   __name(slider, "slider");
 
-  // code/levelConf.js
+  // code/world/levelConf.js
   function loadLevelConf() {
     return {
       width: 16,
@@ -3253,150 +3274,183 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
         sprite("horizontal_border"),
         area(),
         solid(),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "|": () => [
         sprite("vertical_border"),
         area(),
         solid(),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "1": () => [
         sprite("top_left_border"),
         area(),
         solid(),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "2": () => [
         sprite("top_right_border"),
         area(),
         solid(),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "3": () => [
         sprite("bottom_right_border"),
         area(),
         solid(),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "4": () => [
         sprite("bottom_left_border"),
         area(),
         solid(),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "^": () => [
         sprite("floor_spike"),
         area({ scale: 0.7 }),
         solid(),
         origin("bot"),
-        "danger"
+        "danger",
+        "spike",
+        layer("lvl")
       ],
       "v": () => [
         sprite("roof_spike"),
         area({ scale: 0.8 }),
         solid(),
         origin("bot"),
-        "danger"
+        "danger",
+        "spike",
+        layer("lvl")
       ],
       ">": () => [
         sprite("left_wall_spike"),
         area({ scale: 0.8 }),
         solid(),
         origin("bot"),
-        "danger"
+        "danger",
+        "spike",
+        layer("lvl")
       ],
       "<": () => [
         sprite("right_wall_spike"),
         area({ scale: 0.8 }),
         solid(),
         origin("bot"),
-        "danger"
+        "danger",
+        "spike",
+        layer("lvl")
       ],
       "p": () => [
         sprite("door"),
         area({ scale: 0.5 }),
         solid(),
         origin("bot"),
-        "door"
+        "door",
+        layer("lvl")
       ],
       "c": () => [
         sprite("coin"),
         area(),
         origin("bot"),
-        "coin"
+        "coin",
+        layer("lvl")
       ],
       "B": () => [
         sprite("background"),
-        origin("bot")
+        origin("bot"),
+        layer("lvl")
       ],
       "e": () => [
         sprite("enemy"),
         origin("bot"),
         solid(),
         area({ width: 16, height: 6 }),
-        patrol()
+        patrol(),
+        layer("lvl")
       ],
       "s": () => [
-        sprite("enemy"),
+        sprite("spike_ball"),
         origin("bot"),
         solid(),
         body(),
         area({ width: 8, height: 8 }),
-        initPos = this.pos(),
         spike_ball(),
-        "danger"
-      ],
-      "-": () => [
-        sprite("cube"),
-        origin("bot"),
-        solid(),
-        area(),
-        slider("h")
+        "danger",
+        layer("lvl")
       ],
       "+": () => [
         sprite("cube"),
         origin("bot"),
         solid(),
         area(),
-        slider("v")
+        slider("v"),
+        layer("lvl")
       ],
       "0": () => [
         sprite("cube"),
         origin("bot"),
         solid(),
         area(),
-        scale(0.5)
+        scale(0.5),
+        layer("lvl")
       ],
       "]": () => [
         sprite("left_end_border"),
         origin("bot"),
         solid(),
-        area()
+        area(),
+        layer("lvl")
       ],
       "[": () => [
         sprite("right_end_border"),
         origin("bot"),
         solid(),
-        area()
+        area(),
+        layer("lvl")
       ],
       "n": () => [
         sprite("top_end_border"),
         origin("bot"),
         solid(),
-        area()
+        area(),
+        layer("lvl")
       ],
       "u": () => [
         sprite("bottom_end_border"),
         origin("bot"),
         solid(),
-        area()
+        area(),
+        layer("lvl")
+      ],
+      "(": () => [
+        sprite("right_cannon"),
+        origin("bot"),
+        solid(),
+        area({ width: 8, height: 14 }),
+        layer("lvl"),
+        "cannon_right"
+      ],
+      ")": () => [
+        sprite("left_cannon"),
+        origin("bot"),
+        solid(),
+        area({ width: 8, height: 14 }),
+        layer("lvl"),
+        "cannon_left"
       ]
     };
   }
   __name(loadLevelConf, "loadLevelConf");
 
-  // code/backgrounds.js
+  // code/world/backgrounds.js
   function loadBackgrounds(p) {
     switch (p) {
       case 1:
@@ -3556,11 +3610,59 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
           "BBBB                ",
           "BBBB      BBB       "
         ];
+      case 5:
+        return [
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "               BBBBB",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "BBBB                ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "                    ",
+          "      BBBBB         ",
+          "      BBBBB         ",
+          "      BBBBB         ",
+          "      BBBBB         "
+        ];
     }
   }
   __name(loadBackgrounds, "loadBackgrounds");
 
-  // code/backgroundConf.js
+  // code/world/backgroundConf.js
   function loadBackgroundConf() {
     return {
       width: 16,
@@ -3571,37 +3673,75 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       ],
       "|": () => [
         sprite("vertical_track"),
-        origin("bot")
+        origin("bot"),
+        layer("bg")
       ],
       "=": () => [
         sprite("horizontal_track"),
-        origin("bot")
+        origin("bot"),
+        layer("bg")
       ],
       "<": () => [
         sprite("left_end_track"),
-        origin("bot")
+        origin("bot"),
+        layer("bg")
       ],
       "v": () => [
         sprite("bottom_end_track"),
-        origin("bot")
+        origin("bot"),
+        layer("bg")
       ],
       "^": () => [
         sprite("top_end_track"),
-        origin("bot")
+        origin("bot"),
+        layer("bg")
       ],
       ">": () => [
         sprite("right_end_track"),
-        origin("bot")
+        origin("bot"),
+        layer("bg")
       ],
       "e": () => [
         sprite("background"),
         origin("bot"),
         area({ width: 2, height: 2 }),
-        "slider_end"
+        "slider_end",
+        layer("bg")
       ]
     };
   }
   __name(loadBackgroundConf, "loadBackgroundConf");
+
+  // code/object/bullet.js
+  function bullet(dir) {
+    return {
+      add() {
+        this.on("collide", () => {
+          destroy(this);
+          play("pop");
+        });
+      }
+    };
+  }
+  __name(bullet, "bullet");
+
+  // code/behavior/spawnBullet.js
+  function spawnBullet(x, y, dir) {
+    loop(2, () => {
+      play("pop");
+      add([
+        sprite("red_ball"),
+        pos(x, y),
+        solid(),
+        area({ width: 6, length: 6 }),
+        layer("obj"),
+        bullet(),
+        move(dir, 120),
+        "danger"
+      ]);
+    });
+  }
+  __name(spawnBullet, "spawnBullet");
 
   // code/main.js
   no({
@@ -3616,13 +3756,18 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   var FALL_DEATH = 200;
   var ACCUMULATE_FORCE = 0;
   var LASTY = 0;
-  var LEVELS = [loadLevels(1), loadLevels(2), loadLevels(3), loadLevels(4)];
-  var BACKGROUNDS = [loadBackgrounds(1), loadBackgrounds(2), loadBackgrounds(3), loadBackgrounds(4)];
-  var START = [[152, 576], [37, 528], [260, 520], [280, 60]];
-  var DIRECTION = ["t", "t", "t", "b"];
+  layers([
+    "bg",
+    "lvl",
+    "obj"
+  ], "game");
+  var LEVELS = [loadLevels(1), loadLevels(2), loadLevels(3), loadLevels(4), loadLevels(5)];
+  var BACKGROUNDS = [loadBackgrounds(1), loadBackgrounds(2), loadBackgrounds(3), loadBackgrounds(4), loadBackgrounds(5)];
+  var START = [[152, 576], [37, 528], [260, 520], [280, 60], [152, 640]];
+  var DIRECTION = ["t", "t", "t", "b", "t"];
   var backgroundConf = loadBackgroundConf();
   var levelConf = loadLevelConf();
-  var sectionName = ["Complex", "", "", "", "", ""];
+  var sectionName = ["Complex 1 - 1", "Complex 1 - 2", "Complex 1 - 3", "Complex 2 - 1", "Complex 2 - 2", "Complex 2 - 3"];
   scene("menu", () => {
     add([
       text("press space to start", { size: 24 }),
@@ -3630,7 +3775,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       origin("center"),
       color(255, 255, 255)
     ]);
-    onKeyPress(() => go("game"));
+    onKeyPress("space", () => go("game"));
   });
   scene("game", ({ levelId } = { levelId: 0 }) => {
     gravity(3200);
@@ -3645,9 +3790,15 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       body(),
       origin("bot")
     ]);
+    every("cannon_right", (cannon) => {
+      spawnBullet(cannon.pos.x - 16, cannon.pos.y - 16, LEFT);
+    });
+    every("cannon_left", (cannon) => {
+      spawnBullet(cannon.pos.x + 16, cannon.pos.y - 16, RIGHT);
+    });
     camPos(152, player.pos.y - 100);
     add([
-      text(sectionName[Math.round((levelId + 1) / 10)] + " - " + (levelId + 1), { size: 24 }),
+      text(sectionName[levelId], { size: 24 }),
       pos(155, player.pos.y - 150),
       color(255, 255, 255),
       origin("center"),
@@ -3666,6 +3817,8 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       }
     });
     player.onCollide("danger", () => {
+      destroy(level);
+      destroy(background);
       killed();
     });
     player.onCollide("door", () => {
@@ -3677,9 +3830,20 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
         go("menu");
       }
     });
+    onKeyPress("n", () => {
+      if (levelId + 1 < LEVELS.length) {
+        go("game", {
+          levelId: levelId + 1
+        });
+      } else {
+        go("menu");
+      }
+    });
     player.onGround(() => {
       if (player.pos.y - LASTY > FALL_DEATH) {
         player.scale.y = 0.2;
+        destroy(level);
+        destroy(background);
         killed();
       }
       ACCUMULATE_FALL = 0;
